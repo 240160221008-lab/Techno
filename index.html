@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PickMie - Pilih Miemu, Sesuaikan Seleramu!</title>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Local CSS stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header Navigation -->
+    <header>
+        <div class="nav-container">
+            <a href="#" class="logo">
+                <span class="logo-icon">🍜</span>
+                <div class="brand-name">Pick<span>Mie</span></div>
+            </a>
+            <nav>
+                <ul>
+                    <li><a href="#" class="nav-link active" data-target="home">Beranda</a></li>
+                    <li><a href="#menu" class="nav-link" data-target="menu">Menu</a></li>
+                    <li><a href="#tracking" class="nav-link" id="nav-tracking-link" data-target="tracking" style="display: none;">Status Pesanan</a></li>
+                </ul>
+            </nav>
+            <div class="nav-actions">
+                <div class="search-bar">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="menu-search" placeholder="Cari mie favoritmu...">
+                </div>
+                <button class="cart-btn" id="open-cart-btn">
+                    <i class="fa-solid fa-basket-shopping"></i>
+                    Keranjang
+                    <span class="cart-count" id="cart-count">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main>
+        
+        <!-- Hero Banner Section -->
+        <section class="hero" id="hero-section">
+            <div class="hero-container">
+                <div class="hero-text">
+                    <h1>Mulai Petualangan Rasamu di <span>PickMie</span>!</h1>
+                    <p>Temukan kenikmatan mie pilihan dengan kustomisasi penuh! Pilih jenis miemu sendiri (Original, Bayam, atau Wortel), tentukan tingkat kepedasan dari Level 0 hingga 5, dan tambahkan topping premium sesukamu.</p>
+                    <div class="hero-cta">
+                        <button class="btn-primary" onclick="scrollToMenu()">Pesan Sekarang</button>
+                        <button class="btn-secondary" onclick="scrollToMenu()">Lihat Menu</button>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <div class="hero-image-wrapper">
+                        <img src="assets/mie_goreng.png" alt="Mie Goreng PickMie" class="hero-noodle-img">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Menu Section -->
+        <section class="menu-section" id="menu-section">
+            <div class="section-header">
+                <h2>Menu Pilihan PickMie</h2>
+                <p>Nikmati kreasi mie terbaik kami yang siap kamu kustomisasi sepuasnya.</p>
+            </div>
+
+            <!-- Categories Tabs -->
+            <div class="category-tabs">
+                <button class="tab-btn active" data-category="all">Semua Menu ✨</button>
+                <button class="tab-btn" data-category="signature">Signature Mie 🍜</button>
+                <button class="tab-btn" data-category="spicy">Pedas Series 🌶️</button>
+                <button class="tab-btn" data-category="drinks">Drink Menu 🥤</button>
+                <button class="tab-btn" data-category="snacks">Snack & Side 🍰</button>
+                <button class="tab-btn" data-category="sets">Menu Set 💫</button>
+            </div>
+
+            <!-- Noodle Grid -->
+            <div class="noodle-grid" id="noodle-grid">
+                <!-- Noodle Cards will be rendered dynamically by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Order Tracker Section (Initially hidden) -->
+        <section class="order-tracker-section" id="order-tracker-section">
+            <div class="section-header">
+                <h2>Lacak Pesananmu</h2>
+                <p>Nantikan hidangan lezatmu tiba di depan pintu rumah.</p>
+            </div>
+            
+            <div class="tracker-card">
+                <div class="tracker-header">
+                    <div class="order-id">ID Pesanan: <span id="track-order-id">#PM-88294</span></div>
+                    <div class="est-time">Estimasi tiba: <span id="track-eta">20 Menit</span></div>
+                </div>
+
+                <!-- Animated Tracking Timeline -->
+                <div class="timeline">
+                    <div class="timeline-progress" id="timeline-progress"></div>
+                    
+                    <div class="timeline-step active" id="step-received">
+                        <div class="step-icon"><i class="fa-solid fa-receipt"></i></div>
+                        <div class="step-label">Pesanan Diterima</div>
+                    </div>
+                    <div class="timeline-step" id="step-preparing">
+                        <div class="step-icon"><i class="fa-solid fa-fire-burner"></i></div>
+                        <div class="step-label">Sedang Dimasak</div>
+                    </div>
+                    <div class="timeline-step" id="step-delivering">
+                        <div class="step-icon"><i class="fa-solid fa-motorcycle"></i></div>
+                        <div class="step-label">Dalam Perjalanan</div>
+                    </div>
+                    <div class="timeline-step" id="step-arrived">
+                        <div class="step-icon"><i class="fa-solid fa-house-chimney-user"></i></div>
+                        <div class="step-label">Tiba di Tujuan</div>
+                    </div>
+                </div>
+
+                <!-- Driver Information -->
+                <div class="driver-info">
+                    <div class="driver-profile">
+                        <div class="driver-avatar">R</div>
+                        <div class="driver-details">
+                            <h5 id="driver-name">Rian Wijaya</h5>
+                            <p id="driver-phone">Driver PickMie • Honda Vario (B 4931 SBY)</p>
+                        </div>
+                    </div>
+                    <div class="driver-actions">
+                        <button class="btn-icon" onclick="showToast('Menghubungi driver via Chat...')"><i class="fa-solid fa-comment"></i></button>
+                        <button class="btn-icon" onclick="showToast('Menghubungi driver via Telepon...')"><i class="fa-solid fa-phone"></i></button>
+                    </div>
+                </div>
+
+                <button class="btn-tracker-back" onclick="resetToMenu()">Pesan Menu Lainnya</button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Drawer Backdrop (Overlay for side drawer & modal) -->
+    <div class="drawer-backdrop" id="drawer-backdrop"></div>
+
+    <!-- Side Cart Drawer -->
+    <div class="cart-drawer" id="cart-drawer">
+        <div class="drawer-header">
+            <h3>Keranjang Belanja</h3>
+            <button class="close-btn" id="close-cart-btn"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        
+        <div class="cart-items" id="cart-items-container">
+            <!-- Cart Items rendered dynamically by JS -->
+        </div>
+
+        <div class="cart-footer">
+            <div class="summary-row">
+                <span>Subtotal</span>
+                <span id="cart-subtotal">Rp0</span>
+            </div>
+            <div class="summary-row">
+                <span>Pajak (10%)</span>
+                <span id="cart-tax">Rp0</span>
+            </div>
+            <div class="summary-row">
+                <span>Ongkos Kirim</span>
+                <span id="cart-delivery">Rp0</span>
+            </div>
+            <div class="summary-row total">
+                <span>Total Bayar</span>
+                <span id="cart-total">Rp0</span>
+            </div>
+            <button class="checkout-btn" id="checkout-btn">Pesan Sekarang</button>
+        </div>
+    </div>
+
+    <!-- Customizer Drawer Modal -->
+    <div class="modal" id="customize-modal">
+        <!-- Visual Section (Left side in desktop) -->
+        <div class="modal-visual">
+            <img src="" alt="Custom Mie" class="modal-visual-img" id="modal-noodle-img">
+        </div>
+
+        <!-- Customizer Content (Right side in desktop) -->
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h3 id="modal-noodle-title">Mie Goreng Spesial</h3>
+                    <p class="modal-desc" id="modal-noodle-desc">Mie goreng lezat dengan bumbu rahasia.</p>
+                </div>
+                <button class="close-btn" id="close-modal-btn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Custom Option 1: Jenis Mie -->
+            <div class="option-group" id="modal-varian-group">
+                <h4>1. Pilih Varian Mie</h4>
+                <div class="noodle-types-row">
+                    <div class="type-option active" data-type="Original">Original</div>
+                    <div class="type-option" data-type="Bayam (Hijau)">Bayam (Sehat)</div>
+                    <div class="type-option" data-type="Wortel (Oranye)">Wortel (Nutrisi)</div>
+                </div>
+            </div>
+
+            <!-- Custom Option 2: Tingkat Kepedasan -->
+            <div class="option-group" id="modal-spice-group">
+                <h4>2. Tingkat Kepedasan (Level 0 - 5)</h4>
+                <div class="spice-slider-container">
+                    <div class="spice-slider-header">
+                        <span>Pilih Level Pedas:</span>
+                        <span class="spice-level-val" id="spice-level-label">Level 1🌶️</span>
+                    </div>
+                    <input type="range" class="spice-slider" id="spice-level-slider" min="0" max="5" value="1">
+                    <div class="spice-labels">
+                        <span>Lvl 0 (Tidak Pedas)</span>
+                        <span>Lvl 5 (Paling Pedas🔥)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Custom Option 3: Tambahan Topping -->
+            <div class="option-group" id="modal-topping-group">
+                <h4>3. Tambah Topping Premium (Bisa pilih lebih dari satu)</h4>
+                <div class="toppings-grid">
+                    <label class="topping-option" data-topping-name="Chosen Chicken" data-topping-price="5000">
+                        <span><input type="checkbox"> Chosen Chicken 🍗</span>
+                        <span class="topping-price">+Rp5.000</span>
+                    </label>
+                    <label class="topping-option" data-topping-name="Soft Heart Egg" data-topping-price="3000">
+                        <span><input type="checkbox"> Soft Heart Egg 🥚</span>
+                        <span class="topping-price">+Rp3.000</span>
+                    </label>
+                    <label class="topping-option" data-topping-name="Golden Crush" data-topping-price="4000">
+                        <span><input type="checkbox"> Golden Crush 🧀</span>
+                        <span class="topping-price">+Rp4.000</span>
+                    </label>
+                    <label class="topping-option" data-topping-name="Sweet Pick" data-topping-price="4000">
+                        <span><input type="checkbox"> Sweet Pick 🌭</span>
+                        <span class="topping-price">+Rp4.000</span>
+                    </label>
+                    <label class="topping-option" data-topping-name="Bestie Dumpling" data-topping-price="3000">
+                        <span><input type="checkbox"> Bestie Dumpling 🥟</span>
+                        <span class="topping-price">+Rp3.000</span>
+                    </label>
+                    <label class="topping-option" data-topping-name="Cloud Tofu" data-topping-price="3000">
+                        <span><input type="checkbox"> Cloud Tofu 🧊</span>
+                        <span class="topping-price">+Rp3.000</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Modal Footer (Quantity and Add CTA) -->
+            <div class="modal-footer">
+                <div class="modal-price-calc">
+                    <span class="price-label">Total Harga Pilihan</span>
+                    <span class="calc-price" id="modal-total-price">Rp15.000</span>
+                </div>
+                <div class="modal-footer-actions">
+                    <div class="qty-control">
+                        <button class="qty-btn" id="modal-qty-minus"><i class="fa-solid fa-minus"></i></button>
+                        <span class="qty-num" id="modal-qty-val">1</span>
+                        <button class="qty-btn" id="modal-qty-plus"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <button class="btn-add-cart" id="modal-add-cart-btn">Tambah ke Keranjang</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-brand">
+                <h4>Pick<span>Mie</span></h4>
+                <p>PickMie menghadirkan kebebasan penuh bagi Anda untuk meracik mie impian. Dibuat dengan bahan-bahan higienis berkualitas tinggi untuk kepuasan maksimal.</p>
+                <div class="footer-socials">
+                    <a href="#" class="social-icon"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#" class="social-icon"><i class="fa-brands fa-tiktok"></i></a>
+                    <a href="#" class="social-icon"><i class="fa-brands fa-facebook"></i></a>
+                    <a href="#" class="social-icon"><i class="fa-brands fa-whatsapp"></i></a>
+                </div>
+            </div>
+            <div class="footer-links">
+                <h5>Pintasan</h5>
+                <ul>
+                    <li><a href="#" onclick="scrollToSection('hero-section'); return false;">Beranda</a></li>
+                    <li><a href="#" onclick="scrollToSection('menu-section'); return false;">Menu Kami</a></li>
+                    <li><a href="#" onclick="showToast('Fitur Promo akan segera hadir!'); return false;">Promo Spesial</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h5>Tentang Kami</h5>
+                <ul>
+                    <li><a href="#" onclick="showToast('Kami memiliki 12 outlet di seluruh Jabodetabek.'); return false;">Lokasi Outlet</a></li>
+                    <li><a href="#" onclick="showToast('Ingin bermitra? Hubungi support@pickmie.com'); return false;">Kemitraan (Franchise)</a></li>
+                    <li><a href="#" onclick="showToast('Hubungi CS: 0812-3456-7890'); return false;">Hubungi CS</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 PickMie. Semua hak cipta dilindungi undang-undang.</p>
+            <p>Didesain dengan ❤️ oleh Kelompok 4 Technopreneurship</p>
+        </div>
+    </footer>
+    </footer>
+
+
+<!-- SPLASH SCREEN -->
+<div id="splash-screen">
+
+    <!-- dekorasi -->
+    <div class="floating dot-grid"></div>
+    <div class="floating heart">♡</div>
+    <div class="floating wave">≈≈≈</div>
+    <div class="floating sparkle">✧</div>
+
+    <div class="splash-center">
+
+        <div class="logo-circle">
+
+            <img
+            src="assets/logo.png"
+            alt="PickMie Logo"
+            class="splash-logo">
+
+        </div>
+
+        <h1 class="brand">
+            <span class="pick">Pick</span><span class="mie">Mie</span>
+        </h1>
+
+        <p class="tagline">
+            Pilih Aku, Pilih Rasanya 🍜
+        </p>
+
+        <div class="loader">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+
+        <p class="loading-text">
+            Loading...
+        </p>
+
+    </div>
+
+</div>
+    <!-- App JavaScript -->
+    <script src="app.js"></script>
+
+</body>
+</html>
+   
