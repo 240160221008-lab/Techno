@@ -396,6 +396,20 @@ let currentCustomization = {
 };
 let deliverySimTimeout = null;
 
+// Order History State
+let orderHistory = [];
+let currentSimulatedOrder = null;
+
+// Load orderHistory from localStorage if it exists
+try {
+    const savedHistory = localStorage.getItem("pickmie_order_history");
+    if (savedHistory) {
+        orderHistory = JSON.parse(savedHistory);
+    }
+} catch (e) {
+    console.error("Failed to load order history:", e);
+}
+
 // 3. Elements Selection
 const noodleGrid = document.getElementById("noodle-grid");
 const categoryButtons = document.querySelectorAll(".tab-btn");
@@ -448,6 +462,17 @@ const stepReceived = document.getElementById("step-received");
 const stepPreparing = document.getElementById("step-preparing");
 const stepDelivering = document.getElementById("step-delivering");
 const stepArrived = document.getElementById("step-arrived");
+
+// Checkout Form & History Elements
+const checkoutForm = document.getElementById("checkout-form");
+const customerNameInput = document.getElementById("customer-name");
+const paymentMethodVal = document.getElementById("payment-method-val");
+const paymentMethodOptions = document.querySelectorAll(".payment-method-option");
+
+const historySection = document.getElementById("history-section");
+const historyContainer = document.getElementById("history-container");
+const navHistoryLink = document.getElementById("nav-history-link");
+
 
 // 4. Initialize Application
 window.addEventListener("DOMContentLoaded", () => {
@@ -598,6 +623,15 @@ function setupEventListeners() {
         calculateModalPrice();
     });
 
+    // Payment Method Selection
+    paymentMethodOptions.forEach(opt => {
+        opt.addEventListener("click", () => {
+            paymentMethodOptions.forEach(o => o.classList.remove("active"));
+            opt.classList.add("active");
+            paymentMethodVal.value = opt.getAttribute("data-payment");
+        });
+    });
+
     // Add Customized Item to Cart
     modalAddCartBtn.addEventListener("click", addCustomizedToCart);
 
@@ -612,6 +646,9 @@ function setupEventListeners() {
                 e.preventDefault();
                 resetToMenu();
                 scrollToMenu();
+            } else if (target === "history") {
+                e.preventDefault();
+                showHistorySection();
             }
         });
     });
@@ -799,8 +836,11 @@ function renderCart() {
         cartTaxEl.textContent = "Rp0";
         cartDeliveryEl.textContent = "Rp0";
         cartTotalEl.textContent = "Rp0";
+        if (checkoutForm) checkoutForm.style.display = "none";
         return;
     }
+
+    if (checkoutForm) checkoutForm.style.display = "block";
 
     cart.forEach(item => {
         const itemDiv = document.createElement("div");
@@ -881,17 +921,62 @@ function processCheckout() {
         return;
     }
 
+    const customerName = customerNameInput.value.trim();
+    if (!customerName) {
+        showToast("Mohon masukkan nama pelanggan terlebih dahulu!");
+        customerNameInput.focus();
+        return;
+    }
+
+    const paymentMethod = paymentMethodVal.value;
+
+    const subtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
+    const tax = Math.round(subtotal * 0.1);
+    const delivery = 5000;
+    const total = subtotal + tax + delivery;
+
     // Set Random Order ID
     const randomNum = Math.floor(10000 + Math.random() * 90000);
-    trackOrderId.textContent = `#PM-${randomNum}`;
+    const orderId = `#PM-${randomNum}`;
+    trackOrderId.textContent = orderId;
     trackEta.textContent = "20 Menit";
 
     // Close Cart Drawer
     closeCart();
 
+    // Create Order Object
+    currentSimulatedOrder = {
+        orderId: orderId,
+        customerName: customerName,
+        paymentMethod: paymentMethod,
+        items: [...cart],
+        subtotal: subtotal,
+        tax: tax,
+        delivery: delivery,
+        total: total,
+        timestamp: new Date().toLocaleString("id-ID"),
+        status: "Pesanan Diterima"
+    };
+
+    // Push to History
+    orderHistory.push(currentSimulatedOrder);
+    saveOrderHistory();
+
+    // Reset customer name input and payment method active states
+    customerNameInput.value = "";
+    paymentMethodOptions.forEach((opt, idx) => {
+        if (idx === 0) {
+            opt.classList.add("active");
+            paymentMethodVal.value = opt.getAttribute("data-payment");
+        } else {
+            opt.classList.remove("active");
+        }
+    });
+
     // Trigger Screen Transition
     heroSection.style.display = "none";
     menuSection.style.display = "none";
+    historySection.classList.remove("active");
     
     orderTrackerSection.classList.add("active");
     
@@ -929,6 +1014,11 @@ function startDeliverySimulation() {
         trackEta.textContent = "15 Menit";
         showToast("Koki PickMie sedang memasak mie pesananmu! 👨‍🍳🔥");
 
+        if (currentSimulatedOrder) {
+            currentSimulatedOrder.status = "Sedang Dimasak";
+            saveOrderHistory();
+        }
+
         // Step 3: Out for Delivery after 8 seconds total
         deliverySimTimeout = setTimeout(() => {
             stepPreparing.classList.remove("active");
@@ -938,6 +1028,11 @@ function startDeliverySimulation() {
             trackEta.textContent = "8 Menit";
             showToast("Pesananmu siap! Driver sedang meluncur ke lokasimu. 🛵💨");
 
+            if (currentSimulatedOrder) {
+                currentSimulatedOrder.status = "Dalam Perjalanan";
+                saveOrderHistory();
+            }
+
             // Step 4: Arrived after 12 seconds total
             deliverySimTimeout = setTimeout(() => {
                 stepDelivering.classList.remove("active");
@@ -946,6 +1041,12 @@ function startDeliverySimulation() {
                 timelineProgress.style.width = "100%";
                 trackEta.textContent = "Tiba!";
                 showToast("Pesananmu sudah sampai! Selamat menikmati PickMie! 🍜😋");
+
+                if (currentSimulatedOrder) {
+                    currentSimulatedOrder.status = "Tiba di Tujuan";
+                    saveOrderHistory();
+                    currentSimulatedOrder = null;
+                }
             }, 5000);
 
         }, 5000);
@@ -960,6 +1061,7 @@ function resetToMenu() {
     // Swap back screens
     orderTrackerSection.classList.remove("active");
     navTrackingLink.style.display = "none";
+    historySection.classList.remove("active");
     
     heroSection.style.display = "block";
     menuSection.style.display = "block";
@@ -975,6 +1077,126 @@ function resetToMenu() {
 
     renderMenu();
 }
+
+// 10. History Section Handlers
+function saveOrderHistory() {
+    localStorage.setItem("pickmie_order_history", JSON.stringify(orderHistory));
+    // If history view is active, update it in real-time
+    if (historySection.classList.contains("active")) {
+        renderHistory();
+    }
+}
+
+function showHistorySection() {
+    // Clear simulation timeout
+    if (deliverySimTimeout) clearTimeout(deliverySimTimeout);
+
+    // Swap screens
+    heroSection.style.display = "none";
+    menuSection.style.display = "none";
+    orderTrackerSection.classList.remove("active");
+    navTrackingLink.style.display = "none";
+    
+    historySection.classList.add("active");
+
+    // Set Active Navbar Tab
+    navLinks.forEach(link => {
+        if (link.getAttribute("data-target") === "history") {
+            link.classList.add("active");
+        } else {
+            link.classList.remove("active");
+        }
+    });
+
+    renderHistory();
+}
+
+function renderHistory() {
+    historyContainer.innerHTML = "";
+
+    if (orderHistory.length === 0) {
+        historyContainer.innerHTML = `
+            <div class="empty-history">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <h4>Belum Ada Riwayat Pesanan</h4>
+                <p>Kamu belum memesan mie apa pun. Yuk mulai pesan sekarang!</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Sort to show newest first
+    const sortedHistory = [...orderHistory].reverse();
+
+    sortedHistory.forEach(order => {
+        let badgeClass = "received";
+        if (order.status === "Sedang Dimasak") badgeClass = "preparing";
+        else if (order.status === "Dalam Perjalanan") badgeClass = "delivering";
+        else if (order.status === "Tiba di Tujuan") badgeClass = "arrived";
+
+        let statusIcon = "fa-receipt";
+        if (order.status === "Sedang Dimasak") statusIcon = "fa-fire-burner";
+        else if (order.status === "Dalam Perjalanan") statusIcon = "fa-motorcycle";
+        else if (order.status === "Tiba di Tujuan") statusIcon = "fa-house-chimney-user";
+
+        // Generate items html
+        let itemsHtml = "";
+        order.items.forEach(item => {
+            let itemCustomization = "";
+            if (item.category !== "drinks" && item.category !== "snacks" && item.category !== "sets") {
+                itemCustomization = `Varian: ${item.noodleType} • Pedas: Lvl ${item.spiceLevel}`;
+                if (item.toppings && item.toppings.length > 0) {
+                    itemCustomization += ` • Toppings: ` + item.toppings.map(t => t.name).join(", ");
+                }
+            } else {
+                itemCustomization = `Porsi Standar`;
+            }
+
+            itemsHtml += `
+                <div class="history-item-row">
+                    <div class="history-item-details">
+                        <span class="history-item-name">${item.title} (x${item.quantity})</span>
+                        <span class="history-item-sub">${itemCustomization}</span>
+                    </div>
+                    <div class="history-item-price">Rp${item.totalPrice.toLocaleString("id-ID")}</div>
+                </div>
+            `;
+        });
+
+        const card = document.createElement("div");
+        card.className = "history-card";
+        card.innerHTML = `
+            <div class="history-card-header">
+                <div class="history-order-info">
+                    <span class="history-order-id">${order.orderId}</span>
+                    <span class="history-order-date">${order.timestamp}</span>
+                </div>
+                <div class="history-order-badge ${badgeClass}">
+                    <i class="fa-solid ${statusIcon}"></i> ${order.status}
+                </div>
+            </div>
+            <div class="history-card-body">
+                <div class="history-customer-info">
+                    <i class="fa-solid fa-circle-user" style="color: var(--accent);"></i>
+                    Pelanggan: <span>${order.customerName}</span>
+                </div>
+                <div class="history-items-list">
+                    ${itemsHtml}
+                </div>
+            </div>
+            <div class="history-card-footer">
+                <div class="history-payment-info">
+                    Pembayaran: <span>${order.paymentMethod}</span>
+                </div>
+                <div class="history-total-price">
+                    Total: <span>Rp${order.total.toLocaleString("id-ID")}</span>
+                </div>
+            </div>
+        `;
+        historyContainer.appendChild(card);
+    });
+}
+
 
 // 10. Utility Helpers
 function scrollToMenu() {

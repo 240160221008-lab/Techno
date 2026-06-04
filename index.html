@@ -21,6 +21,7 @@
                 <ul>
                     <li><a href="#" class="nav-link active" data-target="home">Beranda</a></li>
                     <li><a href="#menu" class="nav-link" data-target="menu">Menu</a></li>
+                    <li><a href="#history" class="nav-link" id="nav-history-link" data-target="history">Histori</a></li>
                     <li><a href="#tracking" class="nav-link" id="nav-tracking-link" data-target="tracking" style="display: none;">Status Pesanan</a></li>
                 </ul>
             </nav>
@@ -137,6 +138,23 @@
             </div>
         </section>
 
+        <!-- History Section (Initially hidden) -->
+        <section class="history-section" id="history-section">
+            <div class="section-header">
+                <h2>Riwayat Pemesanan</h2>
+                <p>Lihat pesanan-pesanan lezatmu sebelumnya di PickMie.</p>
+            </div>
+            
+            <div class="history-container" id="history-container">
+                <!-- Will be loaded dynamically from localStorage -->
+                <div class="empty-history">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <h4>Belum Ada Riwayat Pesanan</h4>
+                    <p>Kamu belum memesan mie apa pun. Yuk mulai pesan sekarang!</p>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <!-- Drawer Backdrop (Overlay for side drawer & modal) -->
@@ -151,6 +169,33 @@
         
         <div class="cart-items" id="cart-items-container">
             <!-- Cart Items rendered dynamically by JS -->
+        </div>
+
+        <!-- Checkout Form (Customer Info & Payment) -->
+        <div class="checkout-form" id="checkout-form" style="display: none;">
+            <div class="form-group">
+                <label for="customer-name"><i class="fa-solid fa-user"></i> Nama Pelanggan</label>
+                <input type="text" id="customer-name" placeholder="Masukkan nama kamu..." required>
+            </div>
+            <div class="form-group">
+                <label><i class="fa-solid fa-credit-card"></i> Metode Pembayaran</label>
+                <div class="payment-methods-grid">
+                    <div class="payment-method-option active" data-payment="Tunai">
+                        <i class="fa-solid fa-money-bill-wave"></i>
+                        <span>Tunai</span>
+                    </div>
+                    <div class="payment-method-option" data-payment="QRIS">
+                        <i class="fa-solid fa-qrcode"></i>
+                        <span>QRIS</span>
+                    </div>
+                    <div class="payment-method-option" data-payment="E-Wallet">
+                        <i class="fa-solid fa-wallet"></i>
+                        <span>E-Wallet</span>
+                    </div>
+                </div>
+                <!-- Hidden input to store chosen payment method -->
+                <input type="hidden" id="payment-method-val" value="Tunai">
+            </div>
         </div>
 
         <div class="cart-footer">
